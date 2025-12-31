@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>财富养成大师</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            accent: '#F59E0B',
+            dark: '#1E293B',
+            light: '#F8FAFC'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .card-hover {
+        @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+      }
+      .btn-press {
+        @apply transform transition-transform active:scale-95;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-light to-gray-100 min-h-screen font-sans text-dark overflow-x-hidden">
+  <!-- 顶部导航 -->
+  <header class="bg-white/80 backdrop-blur-md shadow-sm fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <i class="fa fa-diamond text-accent text-2xl"></i>
+        <h1 class="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">财富养成大师</h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="hidden md:flex items-center gap-2">
+          <i class="fa fa-coins text-accent"></i>
+          <span id="money-display" class="font-bold text-lg">0</span>
+        </div>
+        <button id="reset-btn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-sm transition-all btn-press">
+          <i class="fa fa-refresh mr-1"></i>重置
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主游戏区域 -->
+  <main class="container mx-auto px-4 pt-24 pb-16">
+    <!-- 移动设备金钱显示 -->
+    <div class="md:hidden bg-white rounded-lg shadow-md p-3 mb-6 flex justify-between items-center">
+      <span class="font-medium">当前财富:</span>
+      <div class="flex items-center gap-1">
+        <i class="fa fa-coins text-accent"></i>
+        <span id="money-display-mobile" class="font-bold">0</span>
+      </div>
+    </div>
+
+    <!-- 点击区域 -->
+    <section class="mb-10">
+      <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="p-6 text-center">
+          <h2 class="text-xl font-bold mb-2">点击赚钱!</h2>
+          <p class="text-gray-500 mb-6">每次点击获得 <span id="click-value" class="font-bold text-primary">1</span> 金币</p>
+          
+          <div id="clicker" class="w-40 h-40 md:w-56 md:h-56 mx-auto bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-all duration-200 btn-press mb-4">
+            <i class="fa fa-hand-pointer-o text-white text-5xl md:text-7xl animate-bounce"></i>
+          </div>
+          
+          <div id="click-effect" class="fixed pointer-events-none top-0 left-0 w-full h-full z-40"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 升级商店 -->
+    <section>
+      <h2 class="text-2xl font-bold mb-6 text-center text-shadow">升级商店</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <!-- 点击升级 -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h3 class="text-lg font-bold flex items-center">
+                  <i class="fa fa-mouse-pointer text-primary mr-2"></i>
+                  点击强化
+                </h3>
+                <p class="text-gray-500 text-sm">提升每次点击收益</p>
+              </div>
+              <span class="bg-primary/10 text-primary px-2 py-1 rounded text-sm font-medium">
+                Lv.<span id="click-upgrade-level">0</span>
+              </span>
+            </div>
+            
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm text-gray-600">当前收益: <span id="current-click-value" class="font-bold">1</span> 金币/次</p>
+                <p class="text-sm text-gray-600">升级后: <span id="next-click-value" class="font-bold">2</span> 金币/次</p>
+              </div>
+              
+              <button id="click-upgrade-btn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md transition-all btn-press">
+                <i class="fa fa-shopping-cart mr-1"></i>
+                <span id="click-upgrade-cost">10</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 自动赚钱升级 -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h3 class="text-lg font-bold flex items-center">
+                  <i class="fa fa-robot text-secondary mr-2"></i>
+                  自动赚钱
+                </h3>
+                <p class="text-gray-500 text-sm">每秒钟自动获得金币</p>
+              </div>
+              <span class="bg-secondary/10 text-secondary px-2 py-1 rounded text-sm font-medium">
+                Lv.<span id="auto-upgrade-level">0</span>
+              </span>
+            </div>
+            
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm text-gray-600">当前收益: <span id="current-auto-value" class="font-bold">0</span> 金币/秒</p>
+                <p class="text-sm text-gray-600">升级后: <span id="next-auto-value" class="font-bold">1</span> 金币/秒</p>
+              </div>
+              
+              <button id="auto-upgrade-btn" class="bg-secondary hover:bg-secondary/90 text-white px-4 py-2 rounded-md transition-all btn-press">
+                <i class="fa fa-shopping-cart mr-1"></i>
+                <span id="auto-upgrade-cost">50</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 统计信息 -->
+    <section class="mt-10 max-w-4xl mx-auto bg-white rounded-xl shadow-md p-5">
+      <h3 class="text-lg font-bold mb-3 flex items-center">
+        <i class="fa fa-bar-chart text-accent mr-2"></i>
+        游戏统计
+      </h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <p class="text-sm text-gray-500">总点击次数</p>
+          <p id="total-clicks" class="font-bold text-lg">0</p>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <p class="text-sm text-gray-500">自动收益总计</p>
+          <p id="total-auto" class="font-bold text-lg">0</p>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <p class="text-sm text-gray-500">总财富增长</p>
+          <p id="total-gained" class="font-bold text-lg">0</p>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <p class="text-sm text-gray-500">升级次数</p>
+          <p id="total-upgrades" class="font-bold text-lg">0</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-dark text-white py-6">
+    <div class="container mx-auto px-4 text-center">
+      <p>财富养成大师 &copy; 2023</p>
+      <p class="text-gray-400 text-sm mt-1">您的进度会自动保存</p>
+    </div>
+  </footer>
+
+  <!-- 通知提示 -->
+  <div id="notification" class="fixed bottom-5 right-5 bg-dark text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+    <i class="fa fa-info-circle"></i>
+    <span id="notification-text"></span>
+  </div>
+
+  <script>
+    // 游戏数据
+    const gameData = {
+      money: 0,
+      clickValue: 1,
+      clickUpgradeLevel: 0,
+      clickUpgradeCost: 10,
+      
+      autoValue: 0,
+      autoUpgradeLevel: 0,
+      autoUpgradeCost: 50,
+      
+      // 统计数据
+      totalClicks: 0,
+      totalAuto: 0,
+      totalGained: 0,
+      totalUpgrades: 0,
+      
+      // 加载保存的数据
+      load() {
+        const saved = localStorage.getItem('clickerGameData');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          Object.assign(this, parsed);
+        }
+      },
+      
+      // 保存数据
+      save() {
+        localStorage.setItem('clickerGameData', JSON.stringify(this));
+      },
+      
+      // 点击赚钱
+      click() {
+        this.money += this.clickValue;
+        this.totalClicks++;
+        this.totalGained += this.clickValue;
+        this.save();
+        return this.clickValue;
+      },
+      
+      // 自动赚钱
+      autoEarn() {
+        if (this.autoValue > 0) {
+          this.money += this.autoValue;
+          this.totalAuto += this.autoValue;
+          this.totalGained += this.autoValue;
+          this.save();
+          return this.autoValue;
+        }
+        return 0;
+      },
+      
+      // 升级点击
+      upgradeClick() {
+        if (this.money >= this.clickUpgradeCost) {
+          this.money -= this.clickUpgradeCost;
+          this.clickUpgradeLevel++;
+          this.clickValue = Math.floor(this.clickValue * 1.5) + 1;
+          this.clickUpgradeCost = Math.floor(this.clickUpgradeCost * 1.8);
+          this.totalUpgrades++;
+          this.save();
+          return true;
+        }
+        return false;
+      },
+      
+      // 升级自动
+      upgradeAuto() {
+        if (this.money >= this.autoUpgradeCost) {
+          this.money -= this.autoUpgradeCost;
+          this.autoUpgradeLevel++;
+          this.autoValue = Math.floor(this.autoValue * 1.7) + 1;
+          this.autoUpgradeCost = Math.floor(this.autoUpgradeCost * 2);
+          this.totalUpgrades++;
+          this.save();
+          return true;
+        }
+        return false;
+      },
+      
+      // 重置游戏
+      reset() {
+        if (confirm('确定要重置游戏进度吗？这将清除所有数据！')) {
+          this.money = 0;
+          this.clickValue = 1;
+          this.clickUpgradeLevel = 0;
+          this.clickUpgradeCost = 10;
+          
+          this.autoValue = 0;
+          this.autoUpgradeLevel = 0;
+          this.autoUpgradeCost = 50;
+          
+          this.totalClicks = 0;
+          this.totalAuto = 0;
+          this.totalGained = 0;
+          this.totalUpgrades = 0;
+          
+          this.save();
+          return true;
+        }
+        return false;
+      }
+    };
+
+    // DOM 元素
+    const elements = {
+      moneyDisplay: document.getElementById('money-display'),
+      moneyDisplayMobile: document.getElementById('money-display-mobile'),
+      clicker: document.getElementById('clicker'),
+      clickValue: document.getElementById('click-value'),
+      clickEffect: document.getElementById('click-effect'),
+      
+      clickUpgradeLevel: document.getElementById('click-upgrade-level'),
+      clickUpgradeCost: document.getElementById('click-upgrade-cost'),
+      currentClickValue: document.getElementById('current-click-value'),
+      nextClickValue: document.getElementById('next-click-value'),
+      clickUpgradeBtn: document.getElementById('click-upgrade-btn'),
+      
+      autoUpgradeLevel: document.getElementById('auto-upgrade-level'),
+      autoUpgradeCost: document.getElementById('auto-upgrade-cost'),
+      currentAutoValue: document.getElementById('current-auto-value'),
+      nextAutoValue: document.getElementById('next-auto-value'),
+      autoUpgradeBtn: document.getElementById('auto-upgrade-btn'),
+      
+      totalClicks: document.getElementById('total-clicks'),
+      totalAuto: document.getElementById('total-auto'),
+      totalGained: document.getElementById('total-gained'),
+      totalUpgrades: document.getElementById('total-upgrades'),
+      
+      resetBtn: document.getElementById('reset-btn'),
+      
+      notification: document.getElementById('notification'),
+      notificationText: document.getElementById('notification-text')
+    };
+
+    // 格式化数字显示
+    function formatNumber(num) {
+      if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+      } else if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+      }
+      return num.toString();
+    }
+
+    // 更新UI显示
+    function updateUI() {
+      // 更新金钱显示
+      elements.moneyDisplay.textContent = formatNumber(gameData.money);
+      elements.moneyDisplayMobile.textContent = formatNumber(gameData.money);
+      
+      // 更新点击值
+      elements.clickValue.textContent = formatNumber(gameData.clickValue);
+      elements.currentClickValue.textContent = formatNumber(gameData.clickValue);
+      
+      // 计算下一级点击值
+      const nextClick = Math.floor(gameData.clickValue * 1.5) + 1;
+      elements.nextClickValue.textContent = formatNumber(nextClick);
+      
+      // 更新点击升级信息
+      elements.clickUpgradeLevel.textContent = gameData.clickUpgradeLevel;
+      elements.clickUpgradeCost.textContent = formatNumber(gameData.clickUpgradeCost);
+      
+      // 更新自动收益
+      elements.currentAutoValue.textContent = formatNumber(gameData.autoValue);
+      
+      // 计算下一级自动收益
+      const nextAuto = gameData.autoValue > 0 
+        ? Math.floor(gameData.autoValue * 1.7) + 1 
+        : 1;
+      elements.nextAutoValue.textContent = formatNumber(nextAuto);
+      
+      // 更新自动升级信息
+      elements.autoUpgradeLevel.textContent = gameData.autoUpgradeLevel;
+      elements.autoUpgradeCost.textContent = formatNumber(gameData.autoUpgradeCost);
+      
+      // 更新统计信息
+      elements.totalClicks.textContent = formatNumber(gameData.totalClicks);
+      elements.totalAuto.textContent = formatNumber(gameData.totalAuto);
+      elements.totalGained.textContent = formatNumber(gameData.totalGained);
+      elements.totalUpgrades.textContent = formatNumber(gameData.totalUpgrades);
+      
+      // 禁用/启用升级按钮
+      elements.clickUpgradeBtn.disabled = gameData.money < gameData.clickUpgradeCost;
+      elements.autoUpgradeBtn.disabled = gameData.money < gameData.autoUpgradeCost;
+      
+      if (elements.clickUpgradeBtn.disabled) {
+        elements.clickUpgradeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        elements.clickUpgradeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+      
+      if (elements.autoUpgradeBtn.disabled) {
+        elements.autoUpgradeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        elements.autoUpgradeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    // 显示通知
+    function showNotification(message) {
+      elements.notificationText.textContent = message;
+      elements.notification.classList.remove('translate-y-20', 'opacity-0');
+      elements.notification.classList.add('translate-y-0', 'opacity-100');
+      
+      setTimeout(() => {
+        elements.notification.classList.remove('translate-y-0', 'opacity-100');
+        elements.notification.classList.add('translate-y-20', 'opacity-0');
+      }, 2000);
+    }
+
+    // 创建点击效果
+    function createClickEffect(x, y, value) {
+      const effect = document.createElement('div');
+      effect.className = 'absolute text-green-500 font-bold pointer-events-none';
+      effect.textContent = '+' + formatNumber(value);
+      effect.style.left = x + 'px';
+      effect.style.top = y + 'px';
+      effect.style.transform = 'translate(-50%, -50%)';
+      effect.style.opacity = '1';
+      effect.style.transition = 'all 0.8s ease-out';
+      
+      elements.clickEffect.appendChild(effect);
+      
+      // 动画效果
+      setTimeout(() => {
+        effect.style.transform = 'translate(-50%, -150%)';
+        effect.style.opacity = '0';
+      }, 10);
+      
+      // 移除元素
+      setTimeout(() => {
+        effect.remove();
+      }, 800);
+    }
+
+    // 注册事件监听
+    function setupEventListeners() {
+      // 点击赚钱
+      elements.clicker.addEventListener('click', (e) => {
+        const value = gameData.click();
+        updateUI();
+        
+        // 创建点击效果
+        const rect = elements.clicker.getBoundingClientRect();
+        const x = e.clientX;
+        const y = e.clientY;
+        createClickEffect(x, y, value);
+        
+        // 按钮动画
+        elements.clicker.classList.add('scale-90');
+        setTimeout(() => {
+          elements.clicker.classList.remove('scale-90');
+        }, 150);
+      });
+      
+      // 升级点击
+      elements.clickUpgradeBtn.addEventListener('click', () => {
+        if (gameData.upgradeClick()) {
+          updateUI();
+          showNotification('点击收益提升！');
+        } else {
+          showNotification('金币不足！');
+        }
+      });
+      
+      // 升级自动
+      elements.autoUpgradeBtn.addEventListener('click', () => {
+        if (gameData.upgradeAuto()) {
+          updateUI();
+          showNotification('自动收益提升！');
+        } else {
+          showNotification('金币不足！');
+        }
+      });
+      
+      // 重置游戏
+      elements.resetBtn.addEventListener('click', () => {
+        if (gameData.reset()) {
+          updateUI();
+          showNotification('游戏已重置！');
+        }
+      });
+    }
+
+    // 自动收益循环
+    function startAutoEarnings() {
+      setInterval(() => {
+        const earned = gameData.autoEarn();
+        if (earned > 0) {
+          updateUI();
+          
+          // 显示自动收益通知（偶尔显示）
+          if (Math.random() < 0.3) {
+            showNotification(`自动获得 ${formatNumber(earned)} 金币！`);
+          }
+        }
+      }, 1000);
+    }
+
+    // 初始化游戏
+    function initGame() {
+      gameData.load();
+      updateUI();
+      setupEventListeners();
+      startAutoEarnings();
+      
+      // 欢迎通知
+      setTimeout(() => {
+        showNotification('欢迎来到财富养成大师！点击按钮开始赚钱吧！');
+      }, 1000);
+    }
+
+    // 启动游戏
+    window.addEventListener('DOMContentLoaded', initGame);
+  </script>
+</body>
+</html>
